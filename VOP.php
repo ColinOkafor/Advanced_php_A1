@@ -8,7 +8,7 @@
 //Activation code
 function myplugin_activate(){
     global $wpdb;
-    $wpdb -> query("CREATE TABLE wp_vps(
+    $wpdb -> query("CREATE TABLE Vps(
     VpID int NOT NULL AUTO_INCREMENT,
     Position varchar(255),
     Organization varchar(255),
@@ -20,15 +20,30 @@ function myplugin_activate(){
     Skills_Required varchar(255),
     PRIMARY KEY(VpID)
     );");
-    $wpdb->query("INSERT INTO wp_vps (Position) VALUES ('Food Bank Volunteer'),
-                                    (Organization) VALUES ('Hamilton caregivers'),
-                                    (Type) VALUES ('seasonal'),
-                                    (E-mail) VALUES ('johndoe123@yahoo.com'),
-                                    (Description) VALUES ('An opportunity to help the homeless by distributing food around jackson square'),
-                                    (Location) VALUES ('50, main street west, Hamilton'),
-                                    (Hours) VALUES ('5'),
-                                    (Skills_Required) VALUES ('Social work');");
+    $wpdb->query("INSERT INTO Vps (Position, 
+                                    Organization, 
+                                    Type, 
+                                    Email, 
+                                    Description,
+                                    Location, 
+                                    Hours, 
+                                    Skills_Required)
+                                    VALUES('Food Bank Volunteer', 
+                                            'Hamilton caregivers', 
+                                            'seasonal',
+                                            'johndoe123@yahoo.com', 
+                                            'An opportunity to help the homeless by distributing food around jackson square',
+                                            '50 Main street West, Hamilton',
+                                            5,
+                                            'social work')");
 }
 register_activation_hook(__FILE__, 'myplugin_activate');
 
+
+//Deactivation Hook
+function myplugin_deactivate(){
+    global $wpdb;
+    $wpdb->query("DELETE FROM Vps;");
+}
+register_deactivation_hook(__FILE__, 'myplugin_deactivate');
 ?>
