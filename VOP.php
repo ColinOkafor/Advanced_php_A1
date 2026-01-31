@@ -48,22 +48,45 @@ function myplugin_deactivate(){
 }
 register_deactivation_hook(__FILE__, 'myplugin_deactivate');
 
-
-//Function to generate HTML for one Volunteer entry
+//Plugin css file handler
+function volunteer_plugin_styles(){
+    wp_enqueue_style(
+        'volunteer-table-style',
+        plugin_dir_url(__FILE__) . 'css/volunteer-table.css'
+    );
+}
+add_action('wp_enqueue_scripts', 'volunteer_plugin_styles');
+//Function to generate HTML for one Volunteer entry in form of a table
 function volunteer_entry($row){
-    return '<div class="volunteer-entry">
-            <strong>Position: </strong> ' . esc_html($row->Position) . '<br>
-            <strong>Organization: </strong> ' . esc_html($row->Organization) . '<br>
-            <strong>Type: </strong> ' . esc_html($row->Type) . '<br>
-            <strong>Email: </strong> ' . esc_html($row->Email) . '<br>
-            <strong>Description: </strong> ' . esc_html($row->Description) . '<br>
-            <strong>Location: </strong> ' . esc_html($row->Location) . '<br>
-            <strong>Hours:n</strong> ' . esc_html($row->Hours) . '<br>
-            <strong>Skills Required: </strong> ' . esc_html($row->Skills_Required) . '<br>
-            <hr>
-        </div>';
+    return '<table class="volunteer-table" border="1" cellpadding="10" cellspacing="0" style ="margin:0 auto;">
+                <thead>
+                    <tr>
+                        <th>Position</th>
+                        <th>Organization</th>
+                        <th>Type</th>
+                        <th>Email</th>
+                        <th>Description</th>
+                        <th>Location</th>
+                        <th>Hours</th>
+                        <th>Skills Required</th>
+                    </tr>
+                </thead>
+                    <tbody>
+                        <tr>
+                            <td>' . esc_html($row->Position) . '</td>
+                            <td>' . esc_html($row->Organization) . '</td>
+                            <td>' . esc_html($row->Type) . '</td>
+                            <td>' . esc_html($row->Email) . '</td>
+                            <td>' . esc_html($row->Description) . '</td>
+                            <td>' . esc_html($row->Location) . '</td>
+                            <td>' . esc_html($row->Hours) . '</td>
+                            <td>' . esc_html($row->Skills_Required) . '</td>
+                        </tr>
+                </tbody>
+            </table>';
 }
 //Wordpress Voluneer opportunity shortcode
+//the id starts from 4 due to bug fixes.
 function wporg_shortcode($atts=[], $content=null){
     global $wpdb;
     $atts = shortcode_atts(
@@ -86,5 +109,5 @@ function wporg_shortcode($atts=[], $content=null){
        }
     return $output;
 }
-add_shortcode('vp', 'wporg_shortcode');
+add_shortcode('volunteer_positions', 'wporg_shortcode');
 ?>

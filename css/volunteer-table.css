@@ -1,0 +1,17 @@
+.volunteer-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.volunteer-table th,
+.volunteer-table td {
+    padding: 10px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.volunteer-table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
