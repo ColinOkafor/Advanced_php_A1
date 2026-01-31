@@ -89,61 +89,126 @@ function volunteer_entry($row){
 //the id starts from 4 due to bug fixes.
 function wporg_shortcode($atts=[], $content=null){
     global $wpdb;
-    $atts = shortcode_atts(
-        array(
-            'id' => 0,
-        ),
-        $atts
-    );
+    $atts = shortcode_atts([
+        'hours'=>'',
+        'type'='',
+    ], $atts);
+
+    //Build query condition
+    $where = []
+    if($atts['hours' !== '']){
+        $where[] = 'Hours <'.intval($atts['hours']); 
+    }
+     if($atts['type' !== '']){
+        $where[] = 'Type = "'.esc_sql($atts['type']).'"'; 
+    }
+
     $query = "SELECT * FROM Vps";
-    $result = $wpdb->get_results($query);
 
    
-      if(empty($result)){
+    if(empty($result)){
        return "No Voluneer Opportunity found";
-       }
-    
-       $output = '';
-       foreach ($result as $row){
-            $output .= volunteer_entry($row);
-       }
-    return $output;
+    }
+    $result = $wpdb->get_results($query);
+
+    //If no parameters, use coloring
+    $use_color = ($atts['hours'] === '' && $atts ['type'] === '');
+    return volunteer_table($results, $use_color);
 }
 add_shortcode('volunteer_positions', 'wporg_shortcode');
 
 
-function wp_events_adminpage_html() {
-// check user capabilities
-if ( ! current_user_can( 'manage_options' ) ) {
-return;
+//Admin page for managing volunteers
+function wp_volunteer_adminpage_html() {
+    // check user capabilities
+    if ( ! current_user_can( 'manage_options' ) ) return;
+
+    global $wpdb;
+    $table = 'Vps';
+
+    //delete handler
+    if(isset($_GET['delete'])){
+        $wpdb->delete($table,['VpID'=> intval($_GET['delete'])]);
+        echo '<div class="notice notice-success"><p>Volunteer opportunity deleted.</p></div>';
+    }
+
+    //create/update form handler
+    if(isset($_POST['volunteer_submit'])){
+        $position = sanitize_text_field($_POST['position']);
+        $organization = sanitize_text_text_field($_POST['organization']);
+        $type = sanitize_text_field($_POST['type']);
+        $email = sanitize_text_email($_POST['email']);
+        $description = sanitize_text_textarea_field($_POST['description']);
+        $location = sanitize_text_text_field($_POST['location']);
+        $hours = intval($_POST['hours']);
+        $skills = sanitize_textarea_field($_POST['skills']);
+
+        $errors = [];
+        if(empty($position)) $errors[] = 'Position is required.';
+        if(empty($organization)) $errors[] = 'Organization is required.';
+        if(!is_email($email)) $errors[] = 'Valid email is required.';
+        if(empty($errors)) {
+            $id = intval($_POST['VpID'] ?? 0);
+                if($id > 0){
+                    //update
+                    $wpdb->update($table, [
+                        'Position'=>$position,
+                        'Organization'=>$organization,
+                        'Type'=>$type,
+                        'Email'=>$email,
+                        'Description'=>$description,
+                        'Location'=>$location,
+                        'Hours'=>$hours,
+                        'Skills_Required'=>$skills
+                    ],['VpID'=>$id]);
+                    echo '<div class="notice notice-success"><p>Volunteer opportunity updated.</p></div>';
+                }else{
+                    //insert
+                    $wpdb->insert($table,[
+                        'Position'=>$position,
+                        'Organization'=>$organization,
+                        'Type'=>$type,
+                        'Email'=>$email,
+                        'Description'=>$description,
+                        'Location'=>$location,
+                        'Hours'=>$hours,
+                        'Skills_Required'=>$skills
+                    ]);
+                    echo '<div class="notice notice-success"><p>Volunteer opportunity added.</p></div>';
+                }
+        }else{
+                echo '<div class="notice notice-success"><p>'.$errors.'</p></div>';
+
+            }
+
+    }
+
+    //Load exisiting data if editing
+    $row = null;
+    if(isset($_GET['edit'])){
+        $row = $wpdb->get_row("SELECT * FROM $table WHERE VpID=".intval($_GET['edit']));
+    }
+    ?>
+    <div class="wrap">
+        <h1><?=$row ? 'Edit' : 'Add' ?>Volunteer Opportunity</h1>
+        <form method='post'>
+
+        </form>
+    </div>
+    <?php
 }
-?>
-<div class="wrap">
-<h1><?php esc_html( get_admin_page_title() ); ?></h1>
-<form action="<?php admin_url('options-general.php?page=events/events.php')?>"
-method="post">
-<label for="someinput">Some Input</label>
-<input type="text" name="someinput">
-<input type="submit">
-</form>
-<p><a href="<?php admin_url('options-
-general.php?page=events/events.php')?>?page=events&amp;somekey=somevalue">my link
-action</a></p>
-<p>POST array: <?php var_dump($_POST) ?></p>
-<p>GET array: <?php var_dump($_GET) ?></p>
-</div>
-<?php
-}
-function wp_events_adminpage() {
+
+
+function wp_volunteer_adminpage() {
 add_menu_page(
-'Events',
-'Events',
+'Volunteer',
+'volunteer',
 'manage_options',
-'events',
-'wp_events_adminpage_html',
-'', // could give a custom icon here
-20
+'Volunteer_manager',
+'wp_volunteer_adminpage_html',
+'dashicons-groups', // could give a custom icon here
+6
 );
 }
-add_action( 'admin_menu', 'wp_events_adminpage' );
+add_action( 'admin_menu', 'wp_volunteer_adminpage' );
 ?>
