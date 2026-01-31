@@ -56,10 +56,39 @@ function volunteer_plugin_styles(){
     );
 }
 add_action('wp_enqueue_scripts', 'volunteer_plugin_styles');
-//Function to generate HTML for one Volunteer entry in form of a table
-function volunteer_entry($row){
-    return '<table class="volunteer-table" border="1" cellpadding="10" cellspacing="0" style ="margin:0 auto;">
-                <thead>
+
+
+//Function to generate HTML table rows for volunteer entries and styled based off the selected hours
+function volunteer_entry($row, $use_color = false){
+    $style ='';
+    if($use_color){
+        if($row->Hours <10){
+            $style = 'style="background-color:#c6efce;"';
+        }elseif($row->Hours >= 10 $$ $row->Hours <=100){
+            $style = 'style="background-color:#fff2cc;"';
+        }else{
+            $style = 'style="background-color:#f4cccc;"';
+
+        }
+    }
+        return '<tr '.$style.'>
+                            <td>' . esc_html($row->Position) . '</td>
+                            <td>' . esc_html($row->Organization) . '</td>
+                            <td>' . esc_html($row->Type) . '</td>
+                            <td>' . esc_html($row->Email) . '</td>
+                            <td>' . esc_html($row->Description) . '</td>
+                            <td>' . esc_html($row->Location) . '</td>
+                            <td>' . esc_html($row->Hours) . '</td>
+                            <td>' . esc_html($row->Skills_Required) . '</td>
+                        </tr>'
+}
+
+//Function to generate full HTML table
+function volunteer_table($rows, $use_color = false){
+    if(empty($rows)) return '<p><em>No Volunteer Opportunities found.</em></p>';
+
+    $output = '<table class="volunteer-table" border="1" cellpadding = "10" cellspacing="0" style="margin:0 auto;">
+                    <thead>
                     <tr>
                         <th>Position</th>
                         <th>Organization</th>
@@ -71,20 +100,17 @@ function volunteer_entry($row){
                         <th>Skills Required</th>
                     </tr>
                 </thead>
-                    <tbody>
-                        <tr>
-                            <td>' . esc_html($row->Position) . '</td>
-                            <td>' . esc_html($row->Organization) . '</td>
-                            <td>' . esc_html($row->Type) . '</td>
-                            <td>' . esc_html($row->Email) . '</td>
-                            <td>' . esc_html($row->Description) . '</td>
-                            <td>' . esc_html($row->Location) . '</td>
-                            <td>' . esc_html($row->Hours) . '</td>
-                            <td>' . esc_html($row->Skills_Required) . '</td>
-                        </tr>
-                </tbody>
-            </table>';
+                <tbody>';
+    foreach($rows as $row){
+        $output .= volunteer_entry($row, $use_color);
+    }
+    $output .= '</tbody></table>';
+    return $output;
+
 }
+
+
+
 //Wordpress Voluneer opportunity shortcode
 //the id starts from 4 due to bug fixes.
 function wporg_shortcode($atts=[], $content=null){
@@ -192,6 +218,55 @@ function wp_volunteer_adminpage_html() {
     <div class="wrap">
         <h1><?=$row ? 'Edit' : 'Add' ?>Volunteer Opportunity</h1>
         <form method='post'>
+            <input type="hidden" name="VpID" value="<?= $row->VpID ?? ''?>">
+            <table class="form-table">
+                <tr>
+                    <th><label for="position">Position</label></th>
+                    <td><input type="text" name="position" id="position" value="<?= esc_attr($row->Position ?? '') ?>" required></td>
+                </tr>
+                 <tr>
+                    <th><label for="organization">Organization</label></th>
+                    <td><input type="text" name="organization" id="organization" value="<?= esc_attr($row->Organization ?? '') ?>" required></td>
+                </tr>
+                <tr>
+                    <th><label for="type">Type</label></th>
+                    <td>
+                        <select name="type" id="type" required>
+                            <option value>Select Type</option>
+                            <?php
+                                $types = ['Full-time', 'Part-time', 'Remote', 'Seasonal'];
+                                foreach($types as $t){
+                                    $selected = (($row-> Type ?? '')==$t)?'selected':'';
+                                    echo "<option value ='$t' $selected>$t</option>";
+                                }
+                            ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="email">Email</label></th>
+                    <td><input type="email" name="email" id="email" value="<?= esc_attr($row->Email ?? '') ?>" required></td>
+                </tr>
+                <tr>
+                    <th><label for="description">Description</label></th>
+                    <td><textarea name="description" id="description"><?= esc_textarea($row->Description ?? '') ?></textarea></td>
+                </tr>
+                <tr>
+                    <th><label for="location">Location</label></th>
+                    <td><input type="text" name="location" id="location" value="<?= esc_attr($row->Location ?? '') ?>" required></td>
+                </tr>
+                <tr>
+                    <th><label for="hours">Hours</label></th>
+                    <td><input type="text" name="hours" id="hours" value="<?= esc_attr($row->Hours ?? '') ?>" required></td>
+                </tr>
+               <tr>
+                    <th><label for="skills">SKills Required</label></th>
+                    <td><textarea name="skills" id="skills"><?= esc_textarea($row->Skills_Required ?? '') ?></textarea></td>
+                </tr>
+            </table>  
+            <p class="submit">
+                <input type="submit" name="volunteer_submit" id="submit" class="button button-primary" value="<?= $row ? 'Update':'Add'?> Volunteer">
+            </p>  
 
         </form>
     </div>
