@@ -110,4 +110,40 @@ function wporg_shortcode($atts=[], $content=null){
     return $output;
 }
 add_shortcode('volunteer_positions', 'wporg_shortcode');
+
+
+function wp_events_adminpage_html() {
+// check user capabilities
+if ( ! current_user_can( 'manage_options' ) ) {
+return;
+}
+?>
+<div class="wrap">
+<h1><?php esc_html( get_admin_page_title() ); ?></h1>
+<form action="<?php admin_url('options-general.php?page=events/events.php')?>"
+method="post">
+<label for="someinput">Some Input</label>
+<input type="text" name="someinput">
+<input type="submit">
+</form>
+<p><a href="<?php admin_url('options-
+general.php?page=events/events.php')?>?page=events&amp;somekey=somevalue">my link
+action</a></p>
+<p>POST array: <?php var_dump($_POST) ?></p>
+<p>GET array: <?php var_dump($_GET) ?></p>
+</div>
+<?php
+}
+function wp_events_adminpage() {
+add_menu_page(
+'Events',
+'Events',
+'manage_options',
+'events',
+'wp_events_adminpage_html',
+'', // could give a custom icon here
+20
+);
+}
+add_action( 'admin_menu', 'wp_events_adminpage' );
 ?>
